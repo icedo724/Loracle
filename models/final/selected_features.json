@@ -1,9 +1,12 @@
 [
   "win_rate",
+  "position_entropy",
+  "win_rate_bottom",
   "win_rate_jungle",
   "win_rate_middle",
+  "win_rate_top",
   "win_rate_utility",
-  "combo_win_rate",
+  "pick_rate_delta",
   "ban_rate_delta",
   "patch_num",
   "primary_position_JUNGLE"

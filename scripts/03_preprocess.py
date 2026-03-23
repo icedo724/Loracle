@@ -8,7 +8,6 @@ import ast
 import os
 import re
 
-import numpy as np
 import pandas as pd
 import requests
 from scipy.stats import entropy as scipy_entropy
@@ -80,10 +79,8 @@ def extract_stats(filepath: str, id_to_name: dict, eng_to_kr: dict) -> pd.DataFr
     stats["ban_count"] = stats["ban_count"].fillna(0)
     stats["ban_rate"]  = (stats["ban_count"] / (total_games * 10)).round(4)
 
-    # 존재감(픽+밴), OP지수(승률×픽률), 밴압박(밴률×승률)
-    stats["presence_rate"] = (stats["pick_rate"] + stats["ban_rate"]).round(4)
-    stats["op_index"]      = (stats["win_rate"] * stats["pick_rate"]).round(6)
-    stats["ban_pressure"]  = (stats["ban_rate"] * stats["win_rate"]).round(6)
+    # OP지수(승률×픽률) — 강하고 많이 쓰이는 챔피언 포착
+    stats["op_index"] = (stats["win_rate"] * stats["pick_rate"]).round(6)
 
     # 포지션 분산도 (높을수록 멀티포지션 챔피언)
     def calc_entropy(grp):
@@ -169,7 +166,7 @@ def main():
         id_to_name, eng_to_kr,
     )
 
-    DELTA_COLS = ["win_rate", "pick_rate", "ban_rate", "presence_rate", "op_index", "ban_pressure"]
+    DELTA_COLS = ["win_rate", "pick_rate", "ban_rate", "op_index"]
 
     if PREV_PATCH and PREV_PATCH in available_versions:
         print(f"[2/3] {PREV_PATCH} 대비 Delta 계산 중...")
@@ -205,9 +202,6 @@ def main():
         print(f"  [경고] 라벨 파일 없음 -> label=0 으로 초기화")
         final_stats["label"] = 0
 
-    # pick_count_log: 샘플 신뢰도 (로그 스케일)
-    if "pick_count" in final_stats.columns:
-        final_stats["pick_count_log"] = np.log1p(final_stats["pick_count"]).round(4)
     final_stats = final_stats.sort_values(
         ["label", "win_rate"], ascending=[False, False]
     ).drop(columns=["pick_count", "win_count", "ban_count"], errors="ignore")

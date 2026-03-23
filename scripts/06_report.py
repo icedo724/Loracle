@@ -99,7 +99,7 @@ def generate_summary():
     sep   = "=" * 60
     lines = [sep, "  Loracle 최종 모델 성능 요약", sep, ""]
 
-    lines.append("[1] LOPO CV 결과 (패치별)")
+    lines.append("[1] 패치 단위 교차검증 결과")
     lines.append("-" * 40)
     for patch_n, info in sorted(parsed["lopo_patches"].items()):
         bar = make_bar(info["f1"], 1.0, width=20)

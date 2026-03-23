@@ -15,8 +15,6 @@ from datetime import datetime
 import pandas as pd
 import requests
 
-from utils import load_api_key
-
 API_FILE   = "../default_info/api.txt"
 USERS_FILE = "../raw_data/target_users.csv"
 QUEUE_ID   = 420  # 랭크 솔로/듀오
@@ -163,7 +161,8 @@ def collect_user_matches(
 
 
 def main():
-    api_key = load_api_key(API_FILE)
+    with open(API_FILE, "r", encoding="utf-8") as f:
+        api_key = f.read().strip()
     headers = {"X-Riot-Token": api_key}
 
     c_major, c_minor = get_latest_patch()

@@ -1,14 +1,15 @@
 """05_train.py — Loracle 모델 학습 파이프라인
 
 실행 흐름:
-    1. 전체 패치 로드 + 피처 엔지니어링  (utils.py)
-    2. LOPO 교차검증 (패치별 F1 Macro)
+    1. 전체 패치 로드 + 피처 엔지니어링
+    2. 패치 단위 교차검증 — 패치별 F1 Macro
     3. 최종 모델 학습: 패치 1~N-1 학습 → 패치 N OOT 평가
     4. 로지스틱 회귀로 변수 설명력 분석
     5. 앙상블 소프트보팅
     6. 모델·리포트 저장
 """
 
+import glob
 import json
 import os
 import warnings
@@ -16,6 +17,7 @@ import warnings
 import joblib
 import numpy as np
 import pandas as pd
+from imblearn.over_sampling import SMOTE, RandomOverSampler
 from imblearn.pipeline import Pipeline as ImbPipeline
 from lightgbm import LGBMClassifier
 from sklearn.ensemble import RandomForestClassifier
@@ -24,21 +26,112 @@ from sklearn.metrics import classification_report, confusion_matrix, f1_score
 from sklearn.preprocessing import StandardScaler
 from xgboost import XGBClassifier
 
-from utils import (
-    FINAL_MODEL_DIR,
-    LABEL_MAP,
-    MINORITY_THRESHOLD,
-    MODELS_DIR,
-    add_engineered_features,
-    load_all_patches,
-    make_sampler,
-    predict_with_threshold,
-    prepare_features,
-)
-
 warnings.filterwarnings("ignore")
 
+# ── 상수 ───────────────────────────────────────────────────────────────────
+PREPROCESSED_DIR = "../preprocessed"
+MODELS_DIR       = "../models"
+FINAL_MODEL_DIR  = os.path.join(MODELS_DIR, "final")
+
+LABEL_MAP          = {0: "유지", 1: "버프", 2: "너프"}
+MINORITY_THRESHOLD = 0.28
+
+NON_FEATURE_COLS = {
+    "champion", "label", "top_item_combo",
+    "primary_position", "patch_name",
+    "pick_count", "win_count", "ban_count",
+}
+
 os.makedirs(FINAL_MODEL_DIR, exist_ok=True)
+
+
+# ── 데이터 로드 ────────────────────────────────────────────────────────────
+def load_all_patches() -> pd.DataFrame:
+    """preprocessed/ 의 전체 패치 CSV를 로드하고 patch_num(1~N)을 부여. label=3(조정) 제외."""
+    paths = sorted(glob.glob(os.path.join(PREPROCESSED_DIR, "ml_dataset_*.csv")))
+    if not paths:
+        raise FileNotFoundError(f"{PREPROCESSED_DIR} 에 데이터가 없습니다.")
+
+    dfs = []
+    for i, path in enumerate(paths, start=1):
+        df = pd.read_csv(path)
+        df["patch_num"]  = i
+        df["patch_name"] = os.path.basename(path).replace("ml_dataset_", "").replace(".csv", "")
+        dfs.append(df)
+
+    combined = pd.concat(dfs, ignore_index=True)
+    combined = combined[combined["label"] != 3].copy()
+
+    print(f"[데이터] {len(paths)}개 패치 로드 | 총 {len(combined)}행 | "
+          f"라벨: {combined['label'].value_counts().to_dict()}")
+    return combined
+
+
+# ── 피처 엔지니어링 ────────────────────────────────────────────────────────
+def add_engineered_features(df: pd.DataFrame) -> pd.DataFrame:
+    """파생 피처 추가: 직전 패치 라벨 원-핫.
+
+    직전 패치에서 버프/너프/유지 여부를 패치 이력 신호로 활용.
+    현재 표본(5패치)에서는 제거되나, 데이터 누적 시 신호 증가 예상.
+    """
+    df = df.copy()
+    df = df.sort_values(["patch_num", "champion"]).reset_index(drop=True)
+    prev = df[["champion", "patch_num", "label"]].copy()
+    prev["patch_num"] += 1
+    prev = prev.rename(columns={"label": "last_label"})
+    df = df.merge(prev, on=["champion", "patch_num"], how="left")
+    df["last_label"] = df["last_label"].fillna(0).astype(int)
+    for v in [0, 1, 2]:
+        df[f"last_label_{v}"] = (df["last_label"] == v).astype(float)
+    df.drop(columns=["last_label"], inplace=True)
+    return df
+
+
+def prepare_features(df: pd.DataFrame, fit_columns: list = None) -> tuple:
+    """수치 컬럼 선택 + primary_position 원-핫 인코딩 + NaN 처리.
+
+    fit_columns 지정 시 해당 컬럼으로 reindex (OOT 예측에서 컬럼 정렬에 사용).
+    """
+    numeric_cols = df.select_dtypes(include=[np.number]).columns.tolist()
+    feature_cols = [c for c in numeric_cols if c not in NON_FEATURE_COLS]
+
+    X = pd.get_dummies(
+        df[feature_cols + ["primary_position"]],
+        columns=["primary_position"],
+        drop_first=False,
+    )
+
+    wr_cols = [c for c in X.columns if c.startswith("win_rate_") and c != "win_rate_delta"]
+    X[wr_cols] = X[wr_cols].fillna(0.5)
+    X = X.fillna(X.median(numeric_only=True))
+
+    if fit_columns is not None:
+        X = X.reindex(columns=fit_columns, fill_value=0)
+
+    return X, df["label"]
+
+
+def make_sampler(min_class_count: int, n_splits: int):
+    """fold 내 소수 클래스 샘플 수를 추정해 SMOTE 또는 RandomOverSampler 반환."""
+    fold_min = max(1, int(min_class_count * (n_splits - 1) / n_splits))
+    if fold_min > 1:
+        return SMOTE(random_state=42, k_neighbors=min(5, fold_min - 1))
+    return RandomOverSampler(random_state=42)
+
+
+def predict_with_threshold(model, X: pd.DataFrame, threshold: float = MINORITY_THRESHOLD) -> np.ndarray:
+    """버프(1)/너프(2) 소수 클래스에 낮은 임계값을 적용한 예측. 후보 없으면 유지(0) 반환."""
+    proba   = model.predict_proba(X)
+    classes = list(model.classes_)
+    preds   = []
+    for p in proba:
+        candidates = {
+            lbl: p[classes.index(lbl)]
+            for lbl in [1, 2]
+            if lbl in classes and p[classes.index(lbl)] >= threshold
+        }
+        preds.append(max(candidates, key=candidates.get) if candidates else 0)
+    return np.array(preds)
 
 
 # ── 모델 설정 ──────────────────────────────────────────────────────────────
@@ -88,13 +181,13 @@ def train_single(X_train, y_train, X_test, y_test, model_name: str, n_splits: in
     return pipeline, y_default, f1_def, "default(0.5)"
 
 
-# ── LOPO 교차검증 ──────────────────────────────────────────────────────────
+# ── 패치 단위 교차검증 ────────────────────────────────────────────────────────
 def leave_one_patch_out(df: pd.DataFrame, X: pd.DataFrame, y: pd.Series) -> str:
     """각 패치를 테스트셋으로 순서대로 사용해 F1 Macro를 측정하고 결과 텍스트 반환."""
     patches = sorted(df["patch_num"].unique())
     results = {}
 
-    print("\n[LOPO CV] Leave-One-Patch-Out 교차검증 시작...")
+    print("\n[패치 단위 교차검증] 시작...")
     for test_patch in patches:
         X_tr = X[df["patch_num"] != test_patch]
         y_tr = y[df["patch_num"] != test_patch]
@@ -130,13 +223,13 @@ def leave_one_patch_out(df: pd.DataFrame, X: pd.DataFrame, y: pd.Series) -> str:
     lopo_mean = np.mean(all_f1) if all_f1 else 0.0
     lopo_std  = np.std(all_f1)  if all_f1 else 0.0
 
-    text  = "\n[LOPO CV 결과]\n" + "-" * 50 + "\n"
+    text  = "\n[패치 단위 교차검증 결과]\n" + "-" * 50 + "\n"
     for k, v in results.items():
         text += f"  {k}: Best={v['best']} F1={v['best_f1']:.4f}\n"
     text += f"  평균 F1 Macro: {lopo_mean:.4f} +- {lopo_std:.4f}\n"
     text += "-" * 50 + "\n"
 
-    print(f"\n  LOPO 평균 F1: {lopo_mean:.4f} +- {lopo_std:.4f}")
+    print(f"\n  평균 F1: {lopo_mean:.4f} +- {lopo_std:.4f}")
     return text
 
 
@@ -270,17 +363,17 @@ def _get_feature_importance(pipeline, feature_cols: list) -> pd.DataFrame:
     )
 
 
-# ── LOPO 기반 역방향 피처 제거 ────────────────────────────────────────────
+# ── 패치 단위 교차검증 기반 역방향 피처 제거 ──────────────────────────────────
 def run_feature_selection(
     df: pd.DataFrame,
     X_all: pd.DataFrame,
     y_all: pd.Series,
     tolerance: float = 0.02,
 ) -> list:
-    """LOPO F1 기준 역방향 제거법으로 최소 피처 집합 탐색.
+    """패치 단위 교차검증 F1 기준 역방향 제거법으로 최소 피처 집합 탐색.
 
-    1. 전체 피처로 LOPO F1 기준값 산출
-    2. LOPO 폴드별 평균 feature importance로 제거 우선순위 결정
+    1. 전체 피처로 패치 단위 교차검증 F1 기준값 산출
+    2. 패치 단위 교차검증 폴드별 평균 feature importance로 제거 우선순위 결정
     3. 중요도 낮은 피처부터 제거 시도 — F1이 (기준 - tolerance) 이상이면 제거 확정
     4. 최소 피처 수 유지(5개)
 
@@ -307,10 +400,10 @@ def run_feature_selection(
         return float(np.mean(scores)) if scores else 0.0
 
     baseline = _lopo_f1(all_features)
-    print(f"\n[피처 선택] 기준 LOPO F1: {baseline:.4f}  ({len(all_features)}개 피처)")
+    print(f"\n[피처 선택] 기준 F1: {baseline:.4f}  ({len(all_features)}개 피처)")
     print("-" * 60)
 
-    # LOPO 폴드별 평균 importance → 제거 우선순위 (오름차순)
+    # 폴드별 평균 importance → 제거 우선순위 (오름차순)
     importances = {f: 0.0 for f in all_features}
     for test_p in patches:
         tr = df["patch_num"] != test_p

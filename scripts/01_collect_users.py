@@ -9,8 +9,6 @@ import os
 import pandas as pd
 import requests
 
-from utils import load_api_key
-
 API_FILE     = "../default_info/api.txt"
 OUTPUT_FILE  = "../raw_data/target_users.csv"
 TARGET_TIERS = ["CHALLENGER", "GRANDMASTER", "MASTER"]
@@ -44,7 +42,8 @@ def fetch_tier_users(tier: str, headers: dict) -> list:
 
 
 def main():
-    api_key = load_api_key(API_FILE)
+    with open(API_FILE, "r", encoding="utf-8") as f:
+        api_key = f.read().strip()
     headers = {"X-Riot-Token": api_key}
 
     print("최상위권 유저 명단 수집을 시작합니다...")
