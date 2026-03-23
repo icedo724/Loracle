@@ -1,0 +1,123 @@
+==================================================
+ 학습 리포트: Model v3 (ml_dataset_16_3_to_16_4.csv)
+==================================================
+[라벨 분포]
+label
+유지    142
+버프     17
+너프     13
+
+
+[이전 모델(v2) → 현재 패치 사전 예측]
+  LightGBM       F1: 0.3201 | 유지 142개 중 117개 정답, 너프 13개 중 1개 정답, 버프 17개 중 1개 정답
+  RandomForest   F1: 0.3034 | 유지 142개 중 61개 정답, 너프 13개 중 6개 정답, 버프 17개 중 5개 정답
+  XGBoost        F1: 0.3321 | 유지 142개 중 104개 정답, 너프 13개 중 2개 정답, 버프 17개 중 2개 정답
+--------------------------------------------------
+[임계값] MINORITY_THRESHOLD=0.3
+
+
+──────────────────────────────────────────────────
+[RandomForest]
+  최적 파라미터 : {'max_depth': 10, 'min_samples_leaf': 3, 'n_estimators': 100}
+  예측 방식     : threshold(0.3)
+  F1 Macro      : 0.4952  (default: 0.4630 / threshold: 0.4952)
+
+  [Confusion Matrix]
+              예측:유지   예측:너프   예측:버프 
+
+  실제:유지     14            4             3   
+  실제:너프     0             2             0   
+  실제:버프     0             2             1   
+
+  [Classification Report]
+              precision    recall  f1-score   support
+
+          유지       1.00      0.67      0.80        21
+          너프       0.25      1.00      0.40         2
+          버프       0.25      0.33      0.29         3
+
+    accuracy                           0.65        26
+   macro avg       0.50      0.67      0.50        26
+weighted avg       0.86      0.65      0.71        26
+
+──────────────────────────────────────────────────
+[XGBoost]
+  최적 파라미터 : {'learning_rate': 0.1, 'max_depth': 3, 'n_estimators': 100, 'scale_pos_weight': 5}
+  예측 방식     : threshold(0.3)
+  F1 Macro      : 0.5635  (default: 0.4630 / threshold: 0.5635)
+
+  [Confusion Matrix]
+              예측:유지   예측:너프   예측:버프 
+
+  실제:유지     18            1             2   
+  실제:너프     1             1             0   
+  실제:버프     2             0             1   
+
+  [Classification Report]
+              precision    recall  f1-score   support
+
+          유지       0.86      0.86      0.86        21
+          너프       0.50      0.50      0.50         2
+          버프       0.33      0.33      0.33         3
+
+    accuracy                           0.77        26
+   macro avg       0.56      0.56      0.56        26
+weighted avg       0.77      0.77      0.77        26
+
+──────────────────────────────────────────────────
+[LightGBM]
+  최적 파라미터 : {'learning_rate': 0.1, 'max_depth': 5, 'n_estimators': 100, 'num_leaves': 31}
+  예측 방식     : threshold(0.3)
+  F1 Macro      : 0.3902  (default: 0.2899 / threshold: 0.3902)
+
+  [Confusion Matrix]
+              예측:유지   예측:너프   예측:버프 
+
+  실제:유지     18            1             2   
+  실제:너프     2             0             0   
+  실제:버프     2             0             1   
+
+  [Classification Report]
+              precision    recall  f1-score   support
+
+          유지       0.82      0.86      0.84        21
+          너프       0.00      0.00      0.00         2
+          버프       0.33      0.33      0.33         3
+
+    accuracy                           0.73        26
+   macro avg       0.38      0.40      0.39        26
+weighted avg       0.70      0.73      0.71        26
+
+==================================================
+[최고 모델] XGBoost | F1 Macro: 0.5635
+[버전 비교] v2: 0.7742 → v3: 0.5635 (-0.2107)
+==================================================
+
+[Feature Importance - XGBoost]
+  상위 3개: presence_rate, ban_pressure, pick_rate
+
+                 Feature  Importance
+           presence_rate    0.214104
+            ban_pressure    0.087848
+               pick_rate    0.062479
+ primary_position_BOTTOM    0.062178
+                op_index    0.055015
+                win_rate    0.053025
+    primary_position_TOP    0.045018
+          win_rate_delta    0.043237
+        position_entropy    0.030706
+         win_rate_middle    0.030386
+                ban_rate    0.028469
+         win_rate_bottom    0.027854
+        win_rate_utility    0.026082
+ primary_position_MIDDLE    0.025610
+          ban_rate_delta    0.025325
+         win_rate_jungle    0.025272
+         pick_rate_delta    0.025029
+     presence_rate_delta    0.023040
+            win_rate_top    0.021823
+ primary_position_JUNGLE    0.021682
+          combo_win_rate    0.018245
+          op_index_delta    0.017587
+      ban_pressure_delta    0.015193
+primary_position_UTILITY    0.014793

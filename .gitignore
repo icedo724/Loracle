@@ -1,0 +1,27 @@
+# 백업
+_backup_scripts/
+
+# 환경
+.venv/
+__pycache__/
+*.pyc
+.idea/
+.claude/
+
+# API 키
+default_info/
+
+# 수집 원본 데이터 (용량 큼)
+raw_data/
+
+# 전처리 데이터 (재현 가능)
+preprocessed/
+
+# 학습된 모델 바이너리
+models/final/*.pkl
+
+# 시스템
+.DS_Store
+Thumbs.db
+
+Loracle_패치별_모델_분석_리포트.md
