@@ -8,11 +8,13 @@ models/summary_report.txt 로 저장.
 
 import os
 import re
+from pathlib import Path
 
 import pandas as pd
 
-FINAL_DIR  = "../models/final"
-MODELS_DIR = "../models"
+_BASE_DIR  = Path(__file__).resolve().parent.parent
+FINAL_DIR  = str(_BASE_DIR / "models" / "final")
+MODELS_DIR = str(_BASE_DIR / "models")
 REPORT_IN  = os.path.join(FINAL_DIR, "evaluation_report.txt")
 REPORT_OUT = os.path.join(MODELS_DIR, "summary_report.txt")
 LABEL_MAP  = {0: "유지", 1: "버프", 2: "너프"}

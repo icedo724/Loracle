@@ -11,12 +11,14 @@
 import os
 import time
 from datetime import datetime
+from pathlib import Path
 
 import pandas as pd
 import requests
 
-API_FILE   = "../default_info/api.txt"
-USERS_FILE = "../raw_data/target_users.csv"
+BASE_DIR   = Path(__file__).resolve().parent.parent
+API_FILE   = BASE_DIR / "default_info" / "api.txt"
+USERS_FILE = BASE_DIR / "raw_data" / "target_users.csv"
 QUEUE_ID   = 420  # 랭크 솔로/듀오
 
 # 새 패치 추가 시 날짜 범위 등록
@@ -26,6 +28,9 @@ PATCH_SCHEDULE = {
     "16_3": ("2026-02-03", "2026-02-18"),
     "16_4": ("2026-02-18", "2026-03-03"),
     "16_5": ("2026-03-04", "2026-03-17"),
+    "16_6": ("2026-03-17", "2026-04-01"),
+    "16_7": ("2026-04-01", "2026-04-15"),
+    "16_8": ("2026-04-15", "2026-04-29")
 }
 
 
@@ -207,8 +212,8 @@ def main():
                 print("[경고] 기간 미지정. 최근 게임부터 역탐색합니다.")
 
     version_key = f"{t_major}_{t_minor}"
-    output_file = f"../raw_data/loracle_matches_v{version_key}.csv"
-    log_file    = f"../raw_data/user_progress_log_{version_key}.txt"
+    output_file = str(BASE_DIR / "raw_data" / f"loracle_matches_v{version_key}.csv")
+    log_file    = str(BASE_DIR / "raw_data" / f"user_progress_log_{version_key}.txt")
 
     processed_users = set()
     if os.path.exists(log_file):

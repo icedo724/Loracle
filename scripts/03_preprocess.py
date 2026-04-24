@@ -7,16 +7,19 @@ raw_data/ 의 매치 CSV와 patch_data/ 의 라벨 CSV를 읽어
 import ast
 import os
 import re
+from pathlib import Path
 
 import pandas as pd
 import requests
 from scipy.stats import entropy as scipy_entropy
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+
 
 def get_available_versions() -> list:
     """raw_data/ 에서 수집된 패치 버전 목록 반환."""
-    raw_data_dir = "../raw_data"
-    if not os.path.exists(raw_data_dir):
+    raw_data_dir = BASE_DIR / "raw_data"
+    if not raw_data_dir.exists():
         print(f"[오류] {raw_data_dir} 폴더가 없습니다.")
         return []
 
@@ -162,7 +165,7 @@ def main():
 
     print(f"\n[1/3] {FEATURE_PATCH} 패치 통계 추출 중...")
     stats_current = extract_stats(
-        f"../raw_data/loracle_matches_v{FEATURE_PATCH}.csv",
+        str(BASE_DIR / "raw_data" / f"loracle_matches_v{FEATURE_PATCH}.csv"),
         id_to_name, eng_to_kr,
     )
 
@@ -171,7 +174,7 @@ def main():
     if PREV_PATCH and PREV_PATCH in available_versions:
         print(f"[2/3] {PREV_PATCH} 대비 Delta 계산 중...")
         stats_prev = extract_stats(
-            f"../raw_data/loracle_matches_v{PREV_PATCH}.csv",
+            str(BASE_DIR / "raw_data" / f"loracle_matches_v{PREV_PATCH}.csv"),
             id_to_name, eng_to_kr,
         )[["champion"] + DELTA_COLS]
 
@@ -191,8 +194,8 @@ def main():
             final_stats[f"{col}_delta"] = 0.0
 
     print(f"[3/3] {LABEL_PATCH} 라벨 병합 중...")
-    label_file = f"../raw_data/patch_data/patch_labels_{LABEL_PATCH}.csv"
-    if os.path.exists(label_file):
+    label_file = BASE_DIR / "raw_data" / "patch_data" / f"patch_labels_{LABEL_PATCH}.csv"
+    if label_file.exists():
         labels_df = pd.read_csv(label_file)
         final_stats = final_stats.merge(
             labels_df[["champion", "label"]], on="champion", how="left"
@@ -206,8 +209,8 @@ def main():
         ["label", "win_rate"], ascending=[False, False]
     ).drop(columns=["pick_count", "win_count", "ban_count"], errors="ignore")
 
-    OUTPUT = f"../preprocessed/ml_dataset_{FEATURE_PATCH}_to_{LABEL_PATCH}.csv"
-    os.makedirs(os.path.dirname(OUTPUT), exist_ok=True)
+    OUTPUT = BASE_DIR / "preprocessed" / f"ml_dataset_{FEATURE_PATCH}_to_{LABEL_PATCH}.csv"
+    os.makedirs(OUTPUT.parent, exist_ok=True)
     final_stats.to_csv(OUTPUT, index=False, encoding="utf-8-sig")
 
     print(f"\n[완료] -> {OUTPUT}")

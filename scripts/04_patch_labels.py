@@ -12,10 +12,13 @@
 
 import os
 import re
+from pathlib import Path
 
 import pandas as pd
 import requests
 from bs4 import BeautifulSoup
+
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 def get_champion_list() -> list:
@@ -168,9 +171,9 @@ def generate_labels(stat_df: pd.DataFrame, mentioned: set, version: str) -> pd.D
 
 
 def main():
-    # 패치마다 아래 두 값만 수정
-    target_url     = "https://www.leagueoflegends.com/ko-kr/news/game-updates/patch-26-6-notes/"
-    target_version = "16.6"
+    # 패치마다 아래 두 값만 수
+    target_url     = "https://www.leagueoflegends.com/ko-kr/news/game-updates/league-of-legends-patch-26-8-notes/"
+    target_version = "16.8"
 
     champ_list = get_champion_list()
     if not champ_list:
@@ -186,8 +189,8 @@ def main():
     labels_df = generate_labels(stat_df, mentioned, target_version)
 
     version_key = target_version.replace(".", "_")
-    os.makedirs("../raw_data/patch_data", exist_ok=True)
-    output = f"../raw_data/patch_data/patch_labels_{version_key}.csv"
+    os.makedirs(BASE_DIR / "raw_data" / "patch_data", exist_ok=True)
+    output = str(BASE_DIR / "raw_data" / "patch_data" / f"patch_labels_{version_key}.csv")
     labels_df.to_csv(output, index=False, encoding="utf-8-sig")
 
     print(f"\n[완료] 저장 -> {output}")

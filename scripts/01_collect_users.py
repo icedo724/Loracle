@@ -5,12 +5,14 @@ PUUID 목록을 수집하여 CSV로 저장.
 """
 
 import os
+from pathlib import Path
 
 import pandas as pd
 import requests
 
-API_FILE     = "../default_info/api.txt"
-OUTPUT_FILE  = "../raw_data/target_users.csv"
+BASE_DIR     = Path(__file__).resolve().parent.parent
+API_FILE     = BASE_DIR / "default_info" / "api.txt"
+OUTPUT_FILE  = BASE_DIR / "raw_data" / "target_users.csv"
 TARGET_TIERS = ["CHALLENGER", "GRANDMASTER", "MASTER"]
 
 

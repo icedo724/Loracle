@@ -13,6 +13,7 @@ import glob
 import json
 import os
 import warnings
+from pathlib import Path
 
 import joblib
 import numpy as np
@@ -29,8 +30,9 @@ from xgboost import XGBClassifier
 warnings.filterwarnings("ignore")
 
 # ── 상수 ───────────────────────────────────────────────────────────────────
-PREPROCESSED_DIR = "../preprocessed"
-MODELS_DIR       = "../models"
+_BASE_DIR        = Path(__file__).resolve().parent.parent
+PREPROCESSED_DIR = str(_BASE_DIR / "preprocessed")
+MODELS_DIR       = str(_BASE_DIR / "models")
 FINAL_MODEL_DIR  = os.path.join(MODELS_DIR, "final")
 
 LABEL_MAP          = {0: "유지", 1: "버프", 2: "너프"}

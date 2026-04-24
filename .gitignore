@@ -17,11 +17,9 @@ raw_data/
 # 전처리 데이터 (재현 가능)
 preprocessed/
 
-# 학습된 모델 바이너리
-models/final/*.pkl
+# 학습된 모델 바이너리 (model_1/ ~ 등 하위 디렉터리 포함)
+models/**/*.pkl
 
 # 시스템
 .DS_Store
 Thumbs.db
-
-Loracle_패치별_모델_분석_리포트.md
