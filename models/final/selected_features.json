@@ -1,8 +1,10 @@
 [
   "win_rate",
+  "pick_rate",
+  "ban_rate",
   "op_index",
-  "win_rate_bottom",
+  "position_entropy",
   "win_rate_middle",
-  "combo_win_rate",
-  "ban_rate_delta"
+  "pick_rate_delta",
+  "primary_position_BOTTOM"
 ]
