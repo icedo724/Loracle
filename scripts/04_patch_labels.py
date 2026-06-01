@@ -172,8 +172,8 @@ def generate_labels(stat_df: pd.DataFrame, mentioned: set, version: str) -> pd.D
 
 def main():
     # 패치마다 아래 두 값만 수정
-    target_url     = "https://www.leagueoflegends.com/ko-kr/news/game-updates/league-of-legends-patch-26-10-notes/"
-    target_version = "16.10"
+    target_url     = "https://www.leagueoflegends.com/ko-kr/news/game-updates/league-of-legends-patch-26-11-notes/"
+    target_version = "16.11"
 
     champ_list = get_champion_list()
     if not champ_list:

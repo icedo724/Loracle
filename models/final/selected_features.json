@@ -1,10 +1,12 @@
 [
   "win_rate",
   "pick_rate",
-  "ban_rate",
-  "op_index",
-  "position_entropy",
   "win_rate_middle",
-  "pick_rate_delta",
-  "primary_position_BOTTOM"
+  "win_rate_utility",
+  "combo_win_rate",
+  "win_rate_delta",
+  "ban_rate_delta",
+  "primary_position_JUNGLE",
+  "primary_position_MIDDLE",
+  "primary_position_TOP"
 ]

@@ -3,178 +3,179 @@
 ==================================================
 
 [라벨 인코딩]  0=유지  1=버프  2=너프
-[학습 방식]   전체 1356행 누적 | 마지막 패치 OOT 평가
+[학습 방식]   전체 1527행 누적 | 마지막 패치 OOT 평가
 
 
 [패치 단위 교차검증 결과]
 --------------------------------------------------
-  patch_1: Best=XGBoost F1=0.4274
-  patch_2: Best=RandomForest F1=0.4417
-  patch_3: Best=RandomForest F1=0.3911
-  patch_4: Best=XGBoost F1=0.4149
-  patch_5: Best=XGBoost F1=0.4582
-  patch_6: Best=LightGBM F1=0.3485
-  patch_7: Best=LightGBM F1=0.4511
-  patch_8: Best=XGBoost F1=0.3432
-  평균 F1 Macro: 0.4095 +- 0.0418
+  patch_1: Best=LightGBM F1=0.3530
+  patch_2: Best=LightGBM F1=0.4881
+  patch_3: Best=XGBoost F1=0.4543
+  patch_4: Best=XGBoost F1=0.4159
+  patch_5: Best=LightGBM F1=0.4683
+  patch_6: Best=LightGBM F1=0.3604
+  patch_7: Best=XGBoost F1=0.4341
+  patch_8: Best=LightGBM F1=0.3891
+  patch_9: Best=LightGBM F1=0.4299
+  평균 F1 Macro: 0.4215 +- 0.0440
 --------------------------------------------------
 
 ==================================================
-LightGBM (F1=0.3197, threshold(0.28))
+LightGBM (F1=0.4299, default(0.5))
 ==================================================
 [라벨 분포]
 label
-유지    158
-버프      4
-너프      2
+유지    161
+버프      5
+너프      5
 
 [Confusion Matrix]
               예측:유지   예측:버프   예측:너프 
 
-  실제:유지    122            19            17  
-  실제:버프     4             0             0   
-  실제:너프     0             1             1   
+  실제:유지    148            4             9   
+  실제:버프     5             0             0   
+  실제:너프     2             0             3   
 
 [Classification Report]
               precision    recall  f1-score   support
 
-          유지       0.97      0.77      0.86       158
-          버프       0.00      0.00      0.00         4
-          너프       0.06      0.50      0.10         2
+          유지       0.95      0.92      0.94       161
+          버프       0.00      0.00      0.00         5
+          너프       0.25      0.60      0.35         5
 
-    accuracy                           0.75       164
-   macro avg       0.34      0.42      0.32       164
-weighted avg       0.93      0.75      0.83       164
+    accuracy                           0.88       171
+   macro avg       0.40      0.51      0.43       171
+weighted avg       0.91      0.88      0.89       171
 
-  상위 피처: pick_rate_delta, position_entropy, ban_rate
+  상위 피처: ban_rate_delta, win_rate_utility, win_rate_middle
 
 ==================================================
-XGBoost (F1=0.3432, default(0.5))
+XGBoost (F1=0.4278, threshold(0.28))
 ==================================================
 [라벨 분포]
 label
-유지    158
-버프      4
-너프      2
+유지    161
+버프      5
+너프      5
 
 [Confusion Matrix]
               예측:유지   예측:버프   예측:너프 
 
-  실제:유지    129            18            11  
-  실제:버프     4             0             0   
-  실제:너프     0             1             1   
+  실제:유지    128            14            19  
+  실제:버프     3             2             0   
+  실제:너프     2             0             3   
 
 [Classification Report]
               precision    recall  f1-score   support
 
-          유지       0.97      0.82      0.89       158
-          버프       0.00      0.00      0.00         4
-          너프       0.08      0.50      0.14         2
+          유지       0.96      0.80      0.87       161
+          버프       0.12      0.40      0.19         5
+          너프       0.14      0.60      0.22         5
 
-    accuracy                           0.79       164
-   macro avg       0.35      0.44      0.34       164
-weighted avg       0.94      0.79      0.86       164
+    accuracy                           0.78       171
+   macro avg       0.41      0.60      0.43       171
+weighted avg       0.91      0.78      0.83       171
 
-  상위 피처: op_index, ban_rate, win_rate
+  상위 피처: ban_rate_delta, primary_position_JUNGLE, win_rate
 
 ==================================================
-RandomForest (F1=0.2727, default(0.5))
+RandomForest (F1=0.3918, default(0.5))
 ==================================================
 [라벨 분포]
 label
-유지    158
-버프      4
-너프      2
+유지    161
+버프      5
+너프      5
 
 [Confusion Matrix]
               예측:유지   예측:버프   예측:너프 
 
-  실제:유지     89            40            29  
-  실제:버프     3             1             0   
-  실제:너프     0             1             1   
+  실제:유지    121            26            14  
+  실제:버프     4             1             0   
+  실제:너프     2             0             3   
 
 [Classification Report]
               precision    recall  f1-score   support
 
-          유지       0.97      0.56      0.71       158
-          버프       0.02      0.25      0.04         4
-          너프       0.03      0.50      0.06         2
+          유지       0.95      0.75      0.84       161
+          버프       0.04      0.20      0.06         5
+          너프       0.18      0.60      0.27         5
 
-    accuracy                           0.55       164
-   macro avg       0.34      0.44      0.27       164
-weighted avg       0.93      0.55      0.69       164
+    accuracy                           0.73       171
+   macro avg       0.39      0.52      0.39       171
+weighted avg       0.90      0.73      0.80       171
 
-  상위 피처: ban_rate, win_rate, op_index
+  상위 피처: ban_rate_delta, pick_rate, win_rate
 
 ==================================================
-앙상블 소프트보팅 (F1=0.2932)
+앙상블 소프트보팅 (F1=0.3899)
 ==================================================
 [라벨 분포]
 label
-유지    158
-버프      4
-너프      2
+유지    161
+버프      5
+너프      5
 
 [Confusion Matrix]
               예측:유지   예측:버프   예측:너프 
 
-  실제:유지     99            30            29  
-  실제:버프     3             1             0   
-  실제:너프     0             1             1   
+  실제:유지    126            15            20  
+  실제:버프     4             1             0   
+  실제:너프     2             0             3   
 
 [Classification Report]
               precision    recall  f1-score   support
 
-          유지       0.97      0.63      0.76       158
-          버프       0.03      0.25      0.06         4
-          너프       0.03      0.50      0.06         2
+          유지       0.95      0.78      0.86       161
+          버프       0.06      0.20      0.10         5
+          너프       0.13      0.60      0.21         5
 
-    accuracy                           0.62       164
-   macro avg       0.35      0.46      0.29       164
-weighted avg       0.94      0.62      0.74       164
+    accuracy                           0.76       171
+   macro avg       0.38      0.53      0.39       171
+weighted avg       0.90      0.76      0.82       171
 
 ==================================================
-[로지스틱 회귀] 변수 설명력 분석 (F1=0.0673)
+[로지스틱 회귀] 변수 설명력 분석 (F1=0.0854)
 ==================================================
 계수 크기 = 해당 클래스 예측에 대한 변수 기여도
 
 [너프 예측 상위 8개 변수]
-  op_index                       +1.1065  +++++++++++
-  win_rate                       +0.4820  ++++
-  ban_rate                       +0.4765  ++++
-  position_entropy               +0.2345  ++
-  pick_rate_delta                +0.0233  
-  primary_position_BOTTOM        -0.0521  
-  win_rate_middle                -0.3008  +++
-  pick_rate                      -0.6771  ++++++
+  win_rate                       +0.6657  ++++++
+  pick_rate                      +0.6585  ++++++
+  ban_rate_delta                 +0.3875  +++
+  primary_position_TOP           +0.2965  ++
+  primary_position_MIDDLE        +0.1864  +
+  primary_position_JUNGLE        +0.1462  +
+  win_rate_utility               -0.0499  
+  combo_win_rate                 -0.1093  +
 
 [버프 예측 상위 8개 변수]
-  pick_rate                      +0.8935  ++++++++
-  win_rate_middle                +0.4109  ++++
-  primary_position_BOTTOM        +0.1314  +
-  pick_rate_delta                -0.0903  
-  position_entropy               -0.1380  +
-  ban_rate                       -0.4039  ++++
-  win_rate                       -0.4840  ++++
-  op_index                       -1.3905  +++++++++++++
+  win_rate_middle                +0.3559  +++
+  win_rate_delta                 +0.1451  +
+  combo_win_rate                 +0.0181  
+  win_rate_utility               -0.0344  
+  primary_position_JUNGLE        -0.0491  
+  primary_position_MIDDLE        -0.0830  
+  ban_rate_delta                 -0.2040  ++
+  primary_position_TOP           -0.2416  ++
 
 [Classification Report - LR]
               precision    recall  f1-score   support
 
-          유지       1.00      0.04      0.08       158
-          버프       0.05      1.00      0.09         4
-          너프       0.01      0.50      0.03         2
+          유지       1.00      0.04      0.07       161
+          버프       0.04      0.80      0.08         5
+          너프       0.05      0.80      0.10         5
 
-    accuracy                           0.07       164
-   macro avg       0.35      0.51      0.07       164
-weighted avg       0.96      0.07      0.08       164
+    accuracy                           0.08       171
+   macro avg       0.37      0.55      0.09       171
+weighted avg       0.94      0.08      0.07       171
 
 ==================================================
 [모델별 F1 Macro 비교]
-  XGBoost         | ##########                     | 0.3432  *
-  LightGBM        | #########                      | 0.3197
-  앙상블             | ########                       | 0.2932
-  RandomForest    | ########                       | 0.2727
+  LightGBM        | ############                   | 0.4299  *
+  XGBoost         | ############                   | 0.4278
+  RandomForest    | ###########                    | 0.3918
+  앙상블             | ###########                    | 0.3899
 
-[최고 모델] XGBoost | F1 Macro: 0.3432
+[최고 모델] LightGBM | F1 Macro: 0.4299
 ==================================================
